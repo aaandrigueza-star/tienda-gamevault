@@ -8,6 +8,7 @@ import { PedidosPageComponent } from './pages/pedidos-page.component';
 export const routes: Routes = [
   { path: '', component: DashboardPageComponent },
   { path: 'inventario', component: InventarioPageComponent },
+  { path: 'ingresar-producto', component: InventarioPageComponent, data: { soloIngreso: true } },
   { path: 'pedidos/nuevo', component: CrearPedidoPageComponent },
   { path: 'pedidos', component: PedidosPageComponent },
   { path: '**', redirectTo: '' }

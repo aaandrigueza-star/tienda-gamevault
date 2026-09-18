@@ -58,6 +58,8 @@ public class ColeccionService {
             // Rellenar datos del detalle con info del videojuego
             detalle.setTitulo(juego.getTitulo());
             detalle.setPrecioUnitario(juego.getPrecio());
+            if (detalle.getFormato() == null || detalle.getFormato().isBlank()) detalle.setFormato(juego.getFormato());
+            if (detalle.getConsola() == null || detalle.getConsola().isBlank()) detalle.setConsola(juego.getPlataforma());
             detalle.setColeccion(item);
 
             total += juego.getPrecio() * detalle.getCantidad();
@@ -78,5 +80,18 @@ public class ColeccionService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado");
         }
         repository.deleteById(id);
+    }
+
+    public Coleccion cambiarEstado(Long id, String estado) {
+        Coleccion item = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
+        if (!"PENDIENTE".equals(estado) && !"CONFIRMADO".equals(estado) && !"CANCELADO".equals(estado)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado no válido");
+        }
+        if ("CANCELADO".equals(item.getEstado()) || "CONFIRMADO".equals(item.getEstado()) && "PENDIENTE".equals(estado)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No se puede devolver el pedido a ese estado");
+        }
+        item.setEstado(estado);
+        return repository.save(item);
     }
 }

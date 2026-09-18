@@ -4,13 +4,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ColeccionService } from '../services/coleccion.service';
 import { ProductoService } from '../services/producto.service';
-import { Videojuego } from '../models/videojuego';
+import { CategoriaProducto, Videojuego } from '../models/videojuego';
 
 interface DetalleTemporal {
   videojuegoId: number;
   titulo: string;
   precio: number;
   cantidad: number;
+  formato: 'DIGITAL' | 'FISICO' | 'AMBOS';
+  consola: string;
 }
 
 @Component({
@@ -18,7 +20,7 @@ interface DetalleTemporal {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-  <section class="panel form-panel narrow">
+  <section class="panel form-panel narrow purchase-panel">
     <p class="eyebrow">NUEVO PEDIDO</p>
     <h2>Finalizar compra</h2>
 
@@ -39,22 +41,59 @@ interface DetalleTemporal {
         </select>
       </label>
 
-      <label>Formato / plataforma
-        <input name="plataforma" [(ngModel)]="plataforma" required>
-      </label>
-
       <hr>
 
-      <p class="eyebrow">AGREGAR JUEGO AL PEDIDO</p>
+      <p class="eyebrow">AÑADIR PRODUCTOS AL PEDIDO</p>
 
-      <label>Videojuego
+      <label>Tipo de producto
+        <select name="categoriaCompra" [(ngModel)]="categoriaCompra">
+          <option value="TODAS">Todos los productos</option>
+          <option value="VIDEOJUEGOS">Videojuegos</option>
+          <option value="CONSOLAS">Consolas</option>
+          <option value="CONTROLES">Controles</option>
+          <option value="REPUESTOS_CONSOLAS">Repuestos para consolas</option>
+          <option value="COMPUTADORES">Computadores gaming / alta gama</option>
+          <option value="REPUESTOS_COMPUTADORES">Repuestos de computador</option>
+        </select>
+      </label>
+
+      <label>Buscar producto
+        <input name="busquedaCompra" type="search" [(ngModel)]="busquedaCompra" placeholder="Busca por nombre, categoría o consola...">
+      </label>
+
+      <label>Producto para añadir
         <select name="juego" [(ngModel)]="videojuegoId">
-          <option [ngValue]="0" disabled>Selecciona un videojuego</option>
-          @for (juego of juegos; track juego.id) {
-            <option [ngValue]="juego.id">{{ juego.titulo }} · {{ juego.plataforma }} · \${{ juego.precio }}</option>
+          <option [ngValue]="0" disabled>Selecciona un producto</option>
+          @for (juego of productosDisponibles; track juego.id) {
+            <option [ngValue]="juego.id">{{ juego.titulo }} · {{ nombreFormato(juego.formato) }} · Xbox {{ juego.xboxUnidades || 0 }} / PS {{ juego.playstationUnidades || 0 }} / Nintendo {{ juego.nintendoUnidades || 0 }} · \${{ juego.precio }}</option>
           }
         </select>
       </label>
+
+      @if (productosDisponibles.length === 0) {
+        <p class="empty">No hay productos que coincidan con la búsqueda.</p>
+      }
+
+      <label>Formato
+        <select name="formatoCompra" [(ngModel)]="formatoCompra">
+          <option value="DIGITAL">Digital</option>
+          <option value="FISICO">Físico</option>
+          <option value="AMBOS">Digital + Físico</option>
+        </select>
+      </label>
+
+      <label>Tipo de consola
+        <select name="consolaCompra" [(ngModel)]="consolaCompra">
+          <option value="XBOX">Xbox</option>
+          <option value="PLAYSTATION">PlayStation</option>
+          <option value="NINTENDO">Nintendo</option>
+          <option value="MULTIPLATAFORMA">Multiplataforma</option>
+        </select>
+      </label>
+
+      @if (juegoSeleccionado) {
+        <p class="stock-summary">Disponibles: {{ unidadesDisponibles(juegoSeleccionado) }} unidades</p>
+      }
 
       <label>Cantidad
         <input name="cantidad" type="number" min="1" [(ngModel)]="cantidad">
@@ -70,7 +109,7 @@ interface DetalleTemporal {
           <tbody>
             @for (d of detalles; track d.videojuegoId) {
               <tr>
-                <td>{{ d.titulo }}</td>
+                <td>{{ d.titulo }}<small class="game-description">{{ nombreFormato(d.formato) }} · {{ d.consola }}</small></td>
                 <td>{{ d.cantidad }}</td>
                 <td>\${{ d.precio }}</td>
                 <td>\${{ d.precio * d.cantidad }}</td>
@@ -105,7 +144,11 @@ export class CrearPedidoPageComponent implements OnInit {
   jugador = '';
   correo = '';
   estado: 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO' = 'PENDIENTE';
-  plataforma = 'Digital';
+  formatoCompra: 'DIGITAL' | 'FISICO' | 'AMBOS' = 'DIGITAL';
+  consolaCompra = 'MULTIPLATAFORMA';
+  plataforma = 'Multiplataforma';
+  categoriaCompra: CategoriaProducto | 'TODAS' = 'TODAS';
+  busquedaCompra = '';
 
   videojuegoId = 0;
   cantidad = 1;
@@ -115,6 +158,23 @@ export class CrearPedidoPageComponent implements OnInit {
   mensaje = '';
   error = false;
 
+  get juegoSeleccionado(): Videojuego | undefined { return this.juegos.find(juego => juego.id === Number(this.videojuegoId)); }
+
+  get productosDisponibles(): Videojuego[] {
+    const texto = this.busquedaCompra.trim().toLowerCase();
+    return this.juegos
+      .filter(juego => {
+        const categoria = (juego.categoria || 'VIDEOJUEGOS').trim().toUpperCase();
+        const contenido = [juego.titulo, juego.categoria, juego.genero, juego.plataforma, juego.descripcion]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return (this.categoriaCompra === 'TODAS' || categoria === this.categoriaCompra)
+          && (!texto || contenido.includes(texto));
+      })
+      .sort((a, b) => a.titulo.localeCompare(b.titulo));
+  }
+
   ngOnInit() {
     this.juegosService.listar().subscribe({
       next: x => this.juegos = x,
@@ -123,16 +183,15 @@ export class CrearPedidoPageComponent implements OnInit {
   }
 
   agregarJuego() {
-    if (!this.videojuegoId || this.cantidad <= 0) {
+    if (!this.videojuegoId || this.cantidad <= 0 || !this.juegoSeleccionado) {
       this.notificar('Selecciona un videojuego y una cantidad válida.', true);
       return;
     }
 
-    const juego = this.juegos.find(j => j.id === Number(this.videojuegoId));
-    if (!juego) {
-      this.notificar('Videojuego no encontrado.', true);
-      return;
-    }
+    const juego = this.juegoSeleccionado;
+    if (!juego) return;
+    const disponibles = this.unidadesDisponibles(juego);
+    if (disponibles > 0 && this.cantidad > disponibles) { this.notificar(`Solo hay ${disponibles} unidades disponibles.`, true); return; }
 
     const existente = this.detalles.find(d => d.videojuegoId === juego.id);
     if (existente) {
@@ -142,12 +201,16 @@ export class CrearPedidoPageComponent implements OnInit {
         videojuegoId: juego.id!,
         titulo: juego.titulo,
         precio: juego.precio,
-        cantidad: this.cantidad
+        cantidad: this.cantidad,
+        formato: this.formatoCompra,
+        consola: this.consolaCompra
       });
     }
 
     this.videojuegoId = 0;
     this.cantidad = 1;
+    this.formatoCompra = 'DIGITAL';
+    this.consolaCompra = 'MULTIPLATAFORMA';
     this.notificar('');
   }
 
@@ -173,7 +236,9 @@ export class CrearPedidoPageComponent implements OnInit {
       total: this.total,
       detalles: this.detalles.map(d => ({
         videojuegoId: d.videojuegoId,
-        cantidad: d.cantidad
+        cantidad: d.cantidad,
+        formato: d.formato,
+        consola: d.consola
       }))
     };
 
@@ -198,5 +263,16 @@ export class CrearPedidoPageComponent implements OnInit {
   private notificar(m: string, e = false) {
     this.mensaje = m;
     this.error = e;
+  }
+
+  nombreFormato(formato?: string): string {
+    return formato === 'FISICO' ? 'Físico' : formato === 'AMBOS' ? 'Digital + Físico' : 'Digital';
+  }
+
+  unidadesDisponibles(juego: Videojuego): number {
+    if (this.consolaCompra === 'XBOX') return juego.xboxUnidades || 0;
+    if (this.consolaCompra === 'PLAYSTATION') return juego.playstationUnidades || 0;
+    if (this.consolaCompra === 'NINTENDO') return juego.nintendoUnidades || 0;
+    return (juego.xboxUnidades || 0) + (juego.playstationUnidades || 0) + (juego.nintendoUnidades || 0);
   }
 }

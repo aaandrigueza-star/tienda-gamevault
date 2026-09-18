@@ -28,6 +28,8 @@ public class DetallePedido {
 
     // Cantidad comprada
     private Integer cantidad;
+    private String formato;
+    private String consola;
 
     public DetallePedido() { }
 
@@ -55,4 +57,8 @@ public class DetallePedido {
     public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+    public String getFormato() { return formato; }
+    public void setFormato(String formato) { this.formato = formato; }
+    public String getConsola() { return consola; }
+    public void setConsola(String consola) { this.consola = consola; }
 }

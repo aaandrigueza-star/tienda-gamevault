@@ -3,6 +3,8 @@ export interface DetallePedido {
   titulo?: string;
   precioUnitario?: number;
   cantidad: number;
+  formato?: 'DIGITAL' | 'FISICO' | 'AMBOS';
+  consola?: string;
   subtotal?: number;
 }
 

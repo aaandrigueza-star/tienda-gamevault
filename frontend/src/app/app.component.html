@@ -2,10 +2,11 @@
 <header class="topbar">
   <div class="brand"><span class="brand-mark">GV</span><span>GAMEVAULT</span></div>
   <nav class="nav-links" aria-label="Navegación principal">
-    <a routerLink="/">Inicio</a>
-    <a routerLink="/inventario">Catálogo</a>
-    <a routerLink="/pedidos/nuevo">Comprar</a>
-    <a routerLink="/pedidos">Pedidos</a>
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+    <a routerLink="/inventario" routerLinkActive="active">Catálogo</a>
+    <a routerLink="/ingresar-producto" routerLinkActive="active">Ingresar producto</a>
+    <a routerLink="/pedidos/nuevo" routerLinkActive="active">Comprar</a>
+    <a routerLink="/pedidos" routerLinkActive="active">Pedidos</a>
   </nav>
 </header>
 

@@ -1,58 +1,27 @@
 package com.suministrosnorte.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
+// Pedido del flujo heredado de operaciones de última milla.
+public class Pedido {
 
-// Detalle de un pedido: cada juego con su cantidad y precio al momento de la compra.
-@Entity
-public class DetallePedido {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // Relación con el pedido padre
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coleccion_id")
-    @JsonBackReference
-    private Coleccion coleccion;
-
-    // ID del videojuego comprado
-    private Long videojuegoId;
-
-    // Título del juego (para no depender del catálogo si se borra)
-    private String titulo;
-
-    // Precio unitario al momento de la compra
-    private Double precioUnitario;
-
-    // Cantidad comprada
+    private String cliente;
+    private Long productoId;
     private Integer cantidad;
+    private Prioridad prioridad;
+    private Estado estado;
 
-    public DetallePedido() { }
-
-    public DetallePedido(Long videojuegoId, String titulo, Double precioUnitario, Integer cantidad) {
-        this.videojuegoId = videojuegoId;
-        this.titulo = titulo;
-        this.precioUnitario = precioUnitario;
-        this.cantidad = cantidad;
-    }
-
-    // Subtotal calculado
-    public Double getSubtotal() {
-        return precioUnitario != null && cantidad != null ? precioUnitario * cantidad : 0.0;
-    }
+    public Pedido() { }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public Coleccion getColeccion() { return coleccion; }
-    public void setColeccion(Coleccion coleccion) { this.coleccion = coleccion; }
-    public Long getVideojuegoId() { return videojuegoId; }
-    public void setVideojuegoId(Long videojuegoId) { this.videojuegoId = videojuegoId; }
-    public String getTitulo() { return titulo; }
-    public void setTitulo(String titulo) { this.titulo = titulo; }
-    public Double getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
+    public String getCliente() { return cliente; }
+    public void setCliente(String cliente) { this.cliente = cliente; }
+    public Long getProductoId() { return productoId; }
+    public void setProductoId(Long productoId) { this.productoId = productoId; }
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
+    public Prioridad getPrioridad() { return prioridad; }
+    public void setPrioridad(Prioridad prioridad) { this.prioridad = prioridad; }
+    public Estado getEstado() { return estado; }
+    public void setEstado(Estado estado) { this.estado = estado; }
 }

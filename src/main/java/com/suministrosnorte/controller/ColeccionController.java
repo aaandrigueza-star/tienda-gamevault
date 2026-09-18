@@ -10,5 +10,6 @@ public class ColeccionController {
  private final ColeccionService service; public ColeccionController(ColeccionService service) { this.service = service; }
  @GetMapping public List<Coleccion> listar() { return service.listar(); }
  @PostMapping @ResponseStatus(HttpStatus.CREATED) public Coleccion crear(@RequestBody Coleccion item) { return service.crear(item); }
+ @PutMapping("/{id}/estado") public Coleccion cambiarEstado(@PathVariable Long id, @RequestParam String estado) { return service.cambiarEstado(id, estado); }
  @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT) public void eliminar(@PathVariable Long id) { service.eliminar(id); }
 }

@@ -19,7 +19,7 @@ import { ColeccionService } from '../services/coleccion.service';
           <div>
             <strong>
               @for (d of item.detalles; track d.videojuegoId) {
-                <span>{{ d.titulo }} (x{{ d.cantidad }}){{ $last ? '' : ', ' }}</span>
+                <span>{{ d.titulo }} (x{{ d.cantidad }}) · {{ d.formato || 'Digital' }} · {{ d.consola || item.plataforma }}{{ $last ? '' : ', ' }}</span>
               } @empty {
                 <span>Sin juegos</span>
               }
@@ -38,6 +38,10 @@ import { ColeccionService } from '../services/coleccion.service';
           </span>
 
           <div class="row-actions">
+            @if (item.estado === 'PENDIENTE') {
+              <button type="button" class="primary" (click)="cambiarEstado(item, 'CONFIRMADO')">Confirmar</button>
+              <button type="button" class="secondary" (click)="cambiarEstado(item, 'CANCELADO')">Cancelar</button>
+            }
             <button type="button" class="danger" (click)="eliminar(item)">Eliminar</button>
           </div>
         </article>
@@ -81,6 +85,14 @@ export class PedidosPageComponent implements OnInit {
         error: () => this.nota('No se pudo eliminar.', true)
       });
     }
+  }
+
+  cambiarEstado(item: Coleccion, estado: 'CONFIRMADO' | 'CANCELADO') {
+    if (!item.id) return;
+    this.items.cambiarEstado(item.id, estado).subscribe({
+      next: actualizado => { item.estado = actualizado.estado; this.nota(`Pedido ${estado.toLowerCase()}.`); },
+      error: e => this.nota(e.error?.message || 'No se pudo cambiar el estado.', true)
+    });
   }
 
   private nota(m: string, e = false) {

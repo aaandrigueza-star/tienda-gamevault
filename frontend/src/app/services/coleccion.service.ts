@@ -20,4 +20,8 @@ export class ColeccionService {
   eliminar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  cambiarEstado(id: number, estado: 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO'): Observable<Coleccion> {
+    return this.http.put<Coleccion>(`${this.baseUrl}/${id}/estado?estado=${estado}`, {});
+  }
 }
