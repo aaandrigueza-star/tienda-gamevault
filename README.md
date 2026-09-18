@@ -1,0 +1,75 @@
+# GameVault - Proyecto Integrador Full Stack
+
+Aplicación full stack Angular + Spring Boot para descubrir videojuegos gratuitos, crear un catálogo propio y administrar una colección personal.
+
+## Alcance del proyecto
+
+- Recurso 1: `Videojuego`, con CRUD completo en `/api/videojuegos`.
+- Recurso 2: `Pedido` (implementado en `/api/colecciones`), para registrar el cliente, videojuego, formato y estado de compra.
+- Integración útil: Angular consulta la API pública [FreeToGame](https://www.freetogame.com/api-doc), el administrador elige un resultado y lo publica en el catálogo de la tienda mediante Spring Boot.
+- Reglas: título, género y plataforma son obligatorios; un pedido debe referenciar un videojuego existente; cliente y estado son obligatorios.
+
+## Ejecutar
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+La API queda disponible en `http://localhost:8080`.
+
+## Frontend Angular
+
+En otra terminal, instala las dependencias y ejecuta el frontend:
+
+```powershell
+cd frontend
+npm install
+npm start
+```
+
+La aplicación queda disponible en `http://localhost:4200`. Spring Boot autoriza únicamente ese origen mediante CORS para el entorno de desarrollo.
+
+La interfaz permite consultar, crear, editar y eliminar productos; crear pedidos; confirmar, cancelar y despachar pedidos según su estado; y consultar el dashboard operativo. Las peticiones se centralizan en `ProductoService` y `PedidoService` de Angular.
+
+## Endpoints
+
+| Metodo | Ruta | Funcion |
+| --- | --- | --- |
+| GET | `/productos` | Consultar productos y stock disponible |
+| GET | `/productos/{id}` | Consultar un producto |
+| POST | `/productos` | Crear un producto |
+| PUT | `/productos/{id}` | Actualizar un producto |
+| DELETE | `/productos/{id}` | Eliminar un producto |
+| POST | `/pedidos` | Crear un pedido pendiente |
+| GET | `/pedidos` | Listar pedidos |
+| GET | `/pedidos/pendientes` | Listar pendientes |
+| GET | `/pedidos/urgentes` | Listar urgentes |
+| GET | `/pedidos/estado?estado=CONFIRMADO` | Filtrar por estado |
+| GET | `/pedidos/resumen` | Ver resumen de estados y urgencias |
+| GET | `/pedidos/siguiente` | Obtener el siguiente pedido pendiente |
+| GET | `/pedidos/en-riesgo` | Detectar pendientes sin stock suficiente |
+| PUT | `/pedidos/{id}/confirmar` | Confirmar y descontar stock |
+| PUT | `/pedidos/{id}/cancelar` | Cancelar y devolver stock si estaba confirmado |
+| PUT | `/pedidos/{id}/despachar` | Despachar un pedido confirmado |
+
+## Reglas
+
+- Productos iniciales: Nike Air Max (`1`, 20 unidades), Adidas Ultraboost (`2`, 5 unidades), Puma Suede (`3`, 0 unidades), Converse Chuck Taylor (`4`, 12 unidades) y New Balance 574 (`5`, 8 unidades).
+- La creacion valida cliente, producto, cantidad y prioridad.
+- La falta de stock no elimina la solicitud: el pedido permanece `PENDIENTE` y aparece en `/pedidos/en-riesgo`.
+- Solo `PENDIENTE` puede confirmarse, solo `CONFIRMADO` puede despacharse.
+- Cancelar un pedido confirmado devuelve su stock.
+- La prioridad se ordena `URGENTE`, `ALTA`, `MEDIA`, `BAJA`; en empate gana el pedido con menor `id`.
+- Las operaciones de inventario son sincronizadas para impedir que dos confirmaciones consuman las mismas unidades.
+
+## Boss final
+
+Un pedido urgente de 20 unidades para un producto con 12 unidades se conserva como `PENDIENTE`, no descuenta stock y se marca mediante `/pedidos/en-riesgo`. Asi la solicitud no se pierde y puede atenderse cuando exista inventario.
+
+## Pruebas
+
+```powershell
+.\mvnw.cmd test
+```
+
+Para comprobar la integración, con ambas aplicaciones ejecutándose abre las herramientas de desarrollo del navegador en `http://localhost:4200`, pestaña **Network**, y realiza un GET, POST, PUT y DELETE desde la interfaz.
